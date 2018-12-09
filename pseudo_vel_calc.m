@@ -18,12 +18,20 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             
             % Solving for u at all nodes except ghost nodes and left wall nodes
             if i < size(u,2)
-                if u(j, i) > 0 
-                    advection_terms = -( u(j, i) * (v(j,i+1) - v(j,i))...
-                        - u(j, i-1) * (v(j,i) - v(j,i-1)) )/(2*delta_x);
+                % Using FTFS with 1st order upwind for u*du/dx
+                if u(j, i) < 0
+                    advection_terms = u(j, i) * (u(j, i) - u(j, i-1))/delta_x;
                 else
-                    advection_terms = ( u(j, i) * (v(j,i+1) - v(j,i))...
-                        - u(j, i-1) * (v(j,i) - v(j,i-1)) )/(2*delta_x);
+                    advection_terms = u(j, i) * (u(j, i+1) - u(j, i))/delta_x;
+                end
+                
+                % Using FTFS with 1st order upwind for v*d/dy
+                if v(j, i) < 0
+                    advection_terms = advection_terms + ...
+                        v(j, i) * (u(j,i) - u(j-1,i))/(delta_y);
+                else
+                    advection_terms = advection_terms + ...
+                        v(j, i) * (u(j+1,i) - u(j,i))/(delta_y);
                 end
                 
                 pseudo_u(j,i) = u(j,i) + delta_t*(...
@@ -35,18 +43,26 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             
             % Solving for v at all nodes except ghost nodes and top & bottom wall nodes
             if j < size(v,1)
-                if u(j, i) > 0 
-                    advection_terms = -v(j-1, i) * (u(j,i) - u(j-1,i)) )/(2*delta_y)...
-                    + (mu/(rho*delta_y^2)) * (v(j+1,i) - 2*v(j,i) + v(j-1,i));
+                % Using FTFS with 1st order upwind for u*dv/dx
+                if u(j, i) < 0
+                    advection_terms = u(j, i) * (v(j,i) - v(j,i-1))/(delta_x);
                 else
-                    advection_terms = v(j-1, i) * (u(j,i) - u(j-1,i)) )/(2*delta_y)...
-                    + (mu/(rho*delta_y^2)) * (v(j+1,i) - 2*v(j,i) + v(j-1,i));
+                    advection_terms = u(j, i) * (v(j,i+1) - v(j,i))/(delta_x);
+                end
+                
+                % Using FTFS with 1st order upwind for v*dv/dy
+                if v(j, i) < 0
+                    advection_terms = advection_terms + ...
+                        v(j, i) * (v(j, i) - v(j-1, i))/delta_y;
+                else
+                    advection_terms = advection_terms + ...
+                        v(j, i) * (v(j+1, i) - v(j, i))/delta_y;
                 end
                 
                 pseudo_v(j,i) = v(j,i) + delta_t*(...
                     - 2 * v(j,i) * (v(j,i) - v(j-1,i))/delta_y...
-                    - ( v(j, i) * (u(j+1,i) - u(j,i))...
                     - advection_terms...
+                    + (mu/(rho*delta_y^2)) * (v(j+1,i) - 2*v(j,i) + v(j-1,i))...
                     ) + g_y * delta_t;
             end
             
