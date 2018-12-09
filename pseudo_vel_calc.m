@@ -17,7 +17,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
         for i = 2:size(u,2)   %Columns: 2 to m+1  (x nodes)
             
             % Solving for u at all nodes except ghost nodes and left wall nodes
-            if i < size(u,2)
+            if i < size(u,2) && j < size(v,1)
                 % Using FTCS + some extra term
                 advection_terms = u(j, i) * (u(j,i+1) - u(j,i-1))/(2*delta_x);
                 
@@ -55,7 +55,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             end
             
             % Solving for v at all nodes except ghost nodes and top & bottom wall nodes
-            if j < size(v,1)
+            if j < size(v,1) && i < size(u,2)
                 % Using FTCS + some extra term
                 advection_terms = (u(j-1,i) + u(j,i) + u(j-1,i+1) + u(j,i+1))/4 + ...
                     u(j, i+1) * (v(j,i+1) - v(j,i-1))/(2*delta_x);
