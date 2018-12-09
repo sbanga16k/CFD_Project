@@ -3,23 +3,26 @@
 % Solves the NS equation using primitive variable formulation and
 % fractional time step method
 function [] = solveCombustionChamberNS()
-    maxTime = ;
-    dt = ;
+    maxTime = 4;
+    dt = 1e-3;
     % Domain parameters
-    domainLength = ;
-    domainWidth = ;
+    domainLength = 3;
+    domainWidth = 1;
     leftInletVelocity = 25;
     inletTemperature = 270;                                                 % Temperature at the left inlet
     inletPressure = 101325;                                                 % Inlet pressure to the chamber is 1 atm
-    recirculation_uVel = ;                                                  % u-velocity at the recirculation inlets
-    recirculation_vVel = ;                                                  % v-velocity at the recirculation inlets
+    recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
+    recirculation_vVel = 25;                                                % v-velocity at the recirculation inlets
     numRecirculationInlets = 4;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
                                                                             % Each row represents the start and end of the inlet
-    inletLocations(1,:) = [];
-    inletLocations(2,:) = [];
-    inletLocations(3,:) = [];
-    inletLocations(4,:) = [];
+    inletSize = domainLength/20;
+    % Recirculation inlets uniformly distributed between domainLength/3 and
+    % 4*domainLength/5
+    inletLocations(1,:) = [domainLength/3, domainLength/3 + inletSize];
+    inletLocations(2,:) = [domainLength/3 + 7*domainLength/60, domainLength/3 + 7*domainLength/60 + inletSize];
+    inletLocations(3,:) = [domainLength/3 + 2*7*domainLength/60, domainLength/3 + 2*7*domainLength/60 + inletSize];
+    inletLocations(4,:) = [domainLength/3 + 3*7*domainLength/60, domainLength/3 + 3*7*domainLength/60 + inletSize];
     % Physical properties of air (taken at 300C)
     % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
     density = 0.6158;
@@ -31,8 +34,8 @@ function [] = solveCombustionChamberNS()
     % Velocity nodes are staggered wrt these nodes
     % u-velocity nodes are staggered dx/2 to the right, v-velocity nodes
     % are staggered dy/2 to the top
-    numControlVols_x = ;                    
-    numControlVols_y = ;
+    numControlVols_x = 100;                    
+    numControlVols_y = 100;
     dx = domainLength/numControlVols_x;
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
@@ -81,6 +84,10 @@ function [] = solveCombustionChamberNS()
     % Temperature at the inlet
     temperatureField(:,1) = inletTemperature;
     
+    % Parameters for Gauss-Seidel with SOR
+    sor_factor = 1.8;
+    epsilon = 1e-6;
+    
     currTime = 0;
     while currTime < maxTime
         % Solving for intermediate velocity field
@@ -88,7 +95,9 @@ function [] = solveCombustionChamberNS()
                                 uVelBottomWall, uVelTopWall, dx, dy, dt, viscosity, density, g_x, g_y);
         % Solving for the pressure at the new time step using the
         % intermediate velocity field
-        
+        pressureField = pressure_calc(pressureField, intermediate_u_vel, intermediate_v_vel,...
+                            inletPressure, uVelTopWall, uVelBottomWall, ...
+                            dx, dy, dt, sor_factor, epsilon);
         
         % Solving for the new velocity field using the pressure field
         [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt, ...
