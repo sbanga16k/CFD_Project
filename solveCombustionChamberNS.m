@@ -5,7 +5,7 @@
 % function [] = solveCombustionChamberNS()
     clear; clc;
     maxTime = 2;
-    dt = 1e-3;
+    dt = 1e-2;
     g_x = 0;
     g_y = -9.81;                                                            % gravitational constant
     % Domain parameters
@@ -94,7 +94,7 @@
     
     % Parameters for Gauss-Seidel with SOR
     sor_factor = 1.9397;
-    epsilon = 1e-3;
+    epsilon = 1e-1;
     
     currTime = dt;
     while currTime < maxTime
@@ -104,11 +104,11 @@
         % Solving for the pressure at the new time step using the
         % intermediate velocity field
         pressureField = pressure_calc(pressureField, intermediate_u_vel, intermediate_v_vel,...
-                            inletPressure, uVelTopWall, uVelBottomWall, density, ...
+                            inletPressure, inletLocations, inletLocations, density, ...
                             dx, dy, dt, sor_factor, epsilon);
         
         % Solving for the new velocity field using the pressure field
-        [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt,dx, ...
+        [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt,dx,dy, ...
                                                     uVelBottomWall, uVelTopWall, density);
                                                 
         % Solving the energy equation for the temperature field
