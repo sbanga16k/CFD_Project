@@ -5,6 +5,8 @@
 function [] = solveCombustionChamberNS()
     maxTime = 4;
     dt = 1e-3;
+    g_x = 0;
+    g_y = -9.81;                                                            % gravitational constant
     % Domain parameters
     domainLength = 3;
     domainWidth = 1;
@@ -23,6 +25,8 @@ function [] = solveCombustionChamberNS()
     inletLocations(2,:) = [domainLength/3 + 7*domainLength/60, domainLength/3 + 7*domainLength/60 + inletSize];
     inletLocations(3,:) = [domainLength/3 + 2*7*domainLength/60, domainLength/3 + 2*7*domainLength/60 + inletSize];
     inletLocations(4,:) = [domainLength/3 + 3*7*domainLength/60, domainLength/3 + 3*7*domainLength/60 + inletSize];
+    % Heat source location (between 0.1*domainLength and 0.2*domainLength)
+    heatSourceLocation = [domainLength/10, domainLength/5];
     % Physical properties of air (taken at 300C)
     % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
     density = 0.6158;
