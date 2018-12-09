@@ -20,7 +20,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             if i < size(u,2)
                 % Using FTCS + some extra term
                 % Using upwind (NEW)
-                if u(j,i) > 0
+                if u(j,i) >= 0
                     advection_terms = u(j, i) * (u(j,i) - u(j,i-1))/(delta_x);
                 else
                     advection_terms = u(j, i) * (u(j,i+1) - u(j,i))/(delta_x);
@@ -30,7 +30,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
                 
                 % Using upwind (NEW)
                 v_curr = (v(j-1,i) + v(j,i) + v(j-1,i+1) + v(j,i+1))/4;     % v-velocity at the location of u(j,i)
-                if v_curr > 0
+                if v_curr >= 0
                     advection_terms = advection_terms + v_curr*(u(j,i) - u(j - 1,i))/delta_y;
                 else
                     advection_terms = advection_terms + v_curr*(u(j + 1,i) - u(j,i))/delta_y;
@@ -73,12 +73,12 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             if j < size(v,1)
                 % Using upwind (NEW)
                 u_curr = (u(j,i-1) + u(j,i) + u(j+1,i-1) + u(j+1,i))/4;      % u-velocity at the location of v(j,i)
-                if u_curr > 0
+                if u_curr >= 0
                     advection_terms = u_curr*(v(j,i) - v(j,i-1))/(delta_x);
                 else
                     advection_terms = u_curr*(v(j,i + 1) - v(j,i))/(delta_x);
                 end
-                if v(j,i) > 0
+                if v(j,i) >= 0
                     advection_terms = advection_terms + v(j,i)*(v(j,i) - v(j-1,i))/(delta_y);
                 else
                     advection_terms = advection_terms + v(j,i)*(v(j + 1,i) - v(j,i))/(delta_y);
