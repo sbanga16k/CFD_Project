@@ -108,7 +108,7 @@
                             dx, dy, dt, sor_factor, epsilon);
         
         % Solving for the new velocity field using the pressure field
-        [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt, ...
+        [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt,dx, ...
                                                     uVelBottomWall, uVelTopWall, density);
                                                 
         % Solving the energy equation for the temperature field
