@@ -30,7 +30,7 @@ function [] = solveCombustionChamberNS()
     dx = domainLength/numControlVols_x;
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
-    pressureField = zeros(numControlVols_x, numControlVols_y);
+    pressureField = zeros(numControlVols_x + 2, numControlVols_y + 2);      % Pressure matrix includes ghost nodes too
     temperatureField = zeros(numControlVols_y, numControlVols_x);
     u_velocity = zeros(numControlVols_y + 2, numControlVols_x + 1);         % u-velocity nodes located at the left and right walls of a CV
     v_velocity = zeros(numControlVols_y + 1, numControlVols_x + 2);         % v-velocity nodes located at the bottom and top walls of a CV
