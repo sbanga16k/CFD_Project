@@ -1,4 +1,6 @@
 % TODO - Check air physical parameters
+% Solves the NS equation using primitive variable formulation and
+% fractional time step method
 function [] = solveCombustionChamberNS()
     maxTime = ;
     dt = ;
@@ -26,8 +28,8 @@ function [] = solveCombustionChamberNS()
     dx = domainLength/numControlVols_x;
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
-    pressure = zeros(numControlVols_x, numControlVols_y);
-    temperature = zeros(numControlVols_y, numControlVols_x);
+    pressureField = zeros(numControlVols_x, numControlVols_y);
+    temperatureField = zeros(numControlVols_y, numControlVols_x);
     u_velocity = zeros(numControlVols_y + 2, numControlVols_x + 1);         % u-velocity nodes located at the left and right walls of a CV
     v_velocity = zeros(numControlVols_y + 1, numControlVols_x + 2);         % v-velocity nodes located at the bottom and top walls of a CV
     
@@ -68,7 +70,21 @@ function [] = solveCombustionChamberNS()
     
     currTime = 0;
     while currTime < maxTime
-        % Solving for velocity field
+        % Solving for intermediate velocity field
+        [intermediate_u_vel, intermediate_v_vel] = pseudo_vel_calc(u_velocity, v_velocity, ...
+                                uVelBottomWall, uVelTopWall, dx, dy, dt, viscosity, density, g_x, g_y);
+        % Solving for the pressure at the new time step using the
+        % intermediate velocity field
+        
+        
+        % Solving for the new velocity field using the pressure field
+        [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt, ...
+                                                    uVelBottomWall, uVelTopWall);
+                                                
+        % Solving the energy equation for the temperature field
+        temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity, pressureField,viscosity,density,specificHeat,...
+                        convectionCoeff,heatSourceLocation,dx,dy,dt);
+                            
         currTime = currTime + dt;
     end
 end
