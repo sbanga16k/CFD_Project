@@ -119,9 +119,32 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
 
         % Compute error in values between consecutive time steps and sets
         % pressure to be equal to pressure_new
-        max_error = max(max(abs(pressure_new(2:end-1,2:end-1) - pressure(2:end-1,2:end-1))))
+        max_error = max(max(abs(pressure_new(2:end-1,2:end-1) - pressure(2:end-1,2:end-1))));
         pressure = pressure_new;
     end
+    % Updating the pressure ghost nodes
+    % Left wall (Average should be equal to inlet pressure)
+    pressure_new(:,1) = 2*p_inlet*ones(numel(pressure_new(:,2)),1) - pressure_new(:,2);
     
+    % Right wall (Zero gradient condition)
+    pressure_new(:, end) = pressure_new(:,end - 1);
+    
+    % Top and bottom walls (zero gradient condition except at the inlet)
+    inletLocIter = 1;                                                    % Used to index into the inletLocations matrix
+    xPos = delta_x/2;
+    for i = 2:size(pseudo_u, 2)
+        xPos = delta_x/2 + (i - 2)*delta_x;
+        if inletLocIter < numRecirculationInlets && xPos > inletLocations(inletLocIter, 2)
+            inletLocIter = inletLocIter + 1;
+        end
+        if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
+            pressure_new(end,:) = 2*p_inlet*ones(1,numel(pressure_new(end,:))) - pressure_new(end - 1,:);                       % At the top wall inlet
+            pressure_new(1,:) = 2*p_inlet*ones(1,numel(pressure_new(1,:))) - pressure_new(2,:);                       % At the bottom wall inlet
+        else
+            % No inlet (zero gradient)
+            pressure_new(end,:) = pressure_new(end - 1,:);    % Top wall
+            pressure_new(1,:) = pressure_new(2,:);            % Bottom wall
+        end
+    end
 end
 

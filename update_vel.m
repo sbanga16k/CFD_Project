@@ -18,8 +18,7 @@ function [u_new, v_new] = update_vel(pseudo_u, pseudo_v, p, delta_t, dx,dy,...
         for i = 2:size(pseudo_u,2)   % Columns: 2 to m+1  (x nodes)
 %             delta_t*(p(j,i) - p(j,i-1))/(density*9.81)
             u_new(j,i) = pseudo_u(j,i) - delta_t*(p(j,i) - p(j,i-1))/(density*dx);
-            v_new(j,i) = pseudo_v(j,i) - delta_t*(p(j,i) - p(j-1,i))/(density*dy);
-            
+            v_new(j,i) = pseudo_v(j,i) - delta_t*(p(j,i) - p(j-1,i))/(density*dy);           
         end
     end
 

@@ -64,8 +64,9 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
 
                 d2u_dx2 = (u(j,i+1) - 2*u(j,i) + u(j,i-1))/(delta_x*delta_x);
                 d2u_dy2 = (u(j + 1,i) - 2*u(j,i) + u(j - 1,i))/(delta_y*delta_y);
+                advection_terms;
                 pseudo_u(j,i) = u(j,i) + delta_t*( -advection_terms...
-                    + (mu/(rho)) * (d2u_dx2 + d2u_dy2) ) + g_x * delta_t
+                    + (mu/(rho)) * (d2u_dx2 + d2u_dy2) ) + g_x * delta_t;
             end
             
             % Solving for v at all nodes except ghost nodes and top & bottom wall nodes
