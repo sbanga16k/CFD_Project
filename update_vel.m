@@ -2,8 +2,8 @@
 % momentum equation employing primite variable formulation
 function [u_new, v_new] = update_vel(pseudo_u, pseudo_v, p, delta_t, ...
     u_bot_nozzles, u_top_nozzles)
-    % Shape of u: m x (n+2)
-    % Shape of v: (m+2) x n
+    % Shape of pseudo_u: m x (n+2)
+    % Shape of pseudo_v: (m+2) x n
     
     % For the ith element in jth row starting from the bottom, 
     % indices given by - u(i+1/2, j) - u(i-1/2, j), v(i, j+1/2) - v(i, j-1/2)
