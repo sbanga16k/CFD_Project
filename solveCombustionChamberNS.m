@@ -2,8 +2,9 @@
 % For numerical values - http://www.ae.iitm.ac.in/~amitk/AS1300/AS1300_TUTORIAL8_2017solution.pdf
 % Solves the NS equation using primitive variable formulation and
 % fractional time step method
-function [] = solveCombustionChamberNS()
-    maxTime = 4;
+% function [] = solveCombustionChamberNS()
+    clear; clc;
+    maxTime = 2;
     dt = 1e-3;
     g_x = 0;
     g_y = -9.81;                                                            % gravitational constant
@@ -35,14 +36,14 @@ function [] = solveCombustionChamberNS()
     convectionCoeff = 35.45;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
     % source - http://bouteloup.pierre.free.fr/lica/phythe/don/air/air_k_plot.pdf
     thermalCond = @(T)(1.5207e-11*T*T*T - 4.8574e-08*T*T + 1.0184e-04*T - 3.9333e-04);
-;
+
     % Discretization
     % Control volume centers correspond to pressure/temperature nodes
     % Velocity nodes are staggered wrt these nodes
     % u-velocity nodes are staggered dx/2 to the right, v-velocity nodes
     % are staggered dy/2 to the top
-    numControlVols_x = 100;                    
-    numControlVols_y = 100;
+    numControlVols_x = 20;                    
+    numControlVols_y = 20;
     dx = domainLength/numControlVols_x;
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
@@ -92,10 +93,10 @@ function [] = solveCombustionChamberNS()
     temperatureField(:,1) = inletTemperature;
     
     % Parameters for Gauss-Seidel with SOR
-    sor_factor = 1.8;
-    epsilon = 1e-4;
+    sor_factor = 1.9397;
+    epsilon = 1e-3;
     
-    currTime = 0;
+    currTime = dt;
     while currTime < maxTime
         % Solving for intermediate velocity field
         [intermediate_u_vel, intermediate_v_vel] = pseudo_vel_calc(u_velocity, v_velocity, ...
@@ -103,17 +104,18 @@ function [] = solveCombustionChamberNS()
         % Solving for the pressure at the new time step using the
         % intermediate velocity field
         pressureField = pressure_calc(pressureField, intermediate_u_vel, intermediate_v_vel,...
-                            inletPressure, uVelTopWall, uVelBottomWall, ...
+                            inletPressure, uVelTopWall, uVelBottomWall, density, ...
                             dx, dy, dt, sor_factor, epsilon);
         
         % Solving for the new velocity field using the pressure field
         [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt, ...
-                                                    uVelBottomWall, uVelTopWall);
+                                                    uVelBottomWall, uVelTopWall, density);
                                                 
         % Solving the energy equation for the temperature field
         temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity,viscosity,density,specificHeat,...
                         convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt);
                             
+        disp(strcat("Current time: ",num2str(currTime)));
         currTime = currTime + dt;
     end
-end
+% end
