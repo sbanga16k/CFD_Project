@@ -10,16 +10,22 @@ function [] = solveCombustionChamberNS()
     domainWidth = ;
     leftInletVelocity = 25;
     inletTemperature = 270;                                                 % Temperature at the left inlet
+    inletPressure = 101325;                                                 % Inlet pressure to the chamber is 1 atm
     recirculation_uVel = ;                                                  % u-velocity at the recirculation inlets
     recirculation_vVel = ;                                                  % v-velocity at the recirculation inlets
-    inletLocations = [];                                                    % Locations of the recirculation inlets
+    numRecirculationInlets = 4;
+    inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
                                                                             % Each row represents the start and end of the inlet
-    numRecirculationInlets = size(inletLocations,1);
-    % Physical properties of air
-    density = ;
-    viscosity = ;
-    specificHeat = ;
-    convectionCoeff = ;
+    inletLocations(1,:) = [];
+    inletLocations(2,:) = [];
+    inletLocations(3,:) = [];
+    inletLocations(4,:) = [];
+    % Physical properties of air (taken at 300C)
+    % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
+    density = 0.6158;
+    viscosity = 2.934e-5;
+    specificHeat = 1044;
+    convectionCoeff = 35.45;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
     % Discretization
     % Control volume centers correspond to pressure/temperature nodes
     % Velocity nodes are staggered wrt these nodes
@@ -31,6 +37,8 @@ function [] = solveCombustionChamberNS()
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
     pressureField = zeros(numControlVols_x + 2, numControlVols_y + 2);      % Pressure matrix includes ghost nodes too
+    pressureField(:,1) = inletPressure;                                     % Setting the ghost nodes to the left of left wall
+    pressureField(:,2) = inletPressure;                                     % and the first set of internal nodes to the inlet pressure
     temperatureField = zeros(numControlVols_y, numControlVols_x);
     u_velocity = zeros(numControlVols_y + 2, numControlVols_x + 1);         % u-velocity nodes located at the left and right walls of a CV
     v_velocity = zeros(numControlVols_y + 1, numControlVols_x + 2);         % v-velocity nodes located at the bottom and top walls of a CV
