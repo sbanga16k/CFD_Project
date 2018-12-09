@@ -4,9 +4,9 @@
 function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
     p_inlet, p_top_nozzles, p_bot_nozzles, ...
     delta_x, delta_y, delta_t, sor_factor, epsilon)
-    % Shape of pseudo_u: (m+1) x (n+2)
-    % Shape of pseudo_v: (m+2) x (n+1)
-    % Shape of pressure: (m+2) x (n+2)
+    % Shape of pseudo_u: (n+2) x (m+1)
+    % Shape of pseudo_v: (n+1) x (m+2)
+    % Shape of pressure: (n+2) x (m+2)
     
     beta = delta_x/delta_y;
 
@@ -21,8 +21,8 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
     % Iterating over all the interior nodes to update the phi values till the
     % algo converges
     while max_error > epsilon
-        for j = 2:size(v, 2)
-            for i = 2:size(u, 1)
+        for j = 2:size(v, 1)
+            for i = 2:size(u, 2)
                 pressure_new(j,i) = (1 - sor_factor)* pressure(j,i) + ...
                     (0.5*sor_factor/(1 + beta*beta))*(pressure_new(j, i-1) + ...
                     pressure(j, i+1) + ...

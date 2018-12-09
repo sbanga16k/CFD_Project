@@ -2,8 +2,8 @@
 % momentum equation employing primite variable formulation
 function [u_new, v_new] = update_vel(pseudo_u, pseudo_v, p, delta_t, ...
     u_bot_nozzles, u_top_nozzles)
-    % Shape of pseudo_u: m x (n+2)
-    % Shape of pseudo_v: (m+2) x n
+    % Shape of u: (n+2) x (m+1)
+    % Shape of v: (n+1) x (m+2)
     
     % For the ith element in jth row starting from the bottom, 
     % indices given by - u(i+1/2, j) - u(i-1/2, j), v(i, j+1/2) - v(i, j-1/2)
@@ -14,18 +14,11 @@ function [u_new, v_new] = update_vel(pseudo_u, pseudo_v, p, delta_t, ...
     
     % Calculate correct velocity components using pressure at next time
     % step for all nodes except boundary & ghost nodes
-    for j=1:size(v,2)     % Rows: 1 to n  (y nodes)
-        for i = 1:size(u,1)   %Columns: 1 to m  (x nodes)
-            % For u, j+1 corresponds to cell i,j
-            % For v, i+1 corresponds to cell i,j
+    for j=2:size(v,1)         % Rows: 1 to n+1  (y nodes)
+        for i = 2:size(u,2)   % Columns: 1 to m+1  (x nodes)
             
-            if (i >= 2)
-                u_new(i,j+1) = pseudo_u(j+1,i) - delta_t*(p(j,i+1) - p(j,i));
-            end
-            
-            if (j >= 2)
-                v_new = pseudo_v(j,i+1) - delta_t*(p(j+1,i) - p(j,i));
-            end
+            u_new(j,i) = pseudo_u(j,i) - delta_t*(p(j,i) - p(j,i-1));
+            v_new(j,i) = pseudo_v(j,i) - delta_t*(p(j,i) - p(j-1,i));
             
         end
     end
