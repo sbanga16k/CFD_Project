@@ -13,7 +13,7 @@
 % TODO - Check thermal conductivity, convection coefficient
 % TODO - Ghost nodes for temperature
 function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocity, v_velocity,viscosity,density,specificHeat,...
-                        convectionCoeff,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt)
+                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt)
     % The number of internal nodes in the discretization
     numInternalNodes_x = size(u_velocity,2) - 1;
     numInternalNodes_y = size(v_velocity,1) - 1;
@@ -40,8 +40,8 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             u_top = 0.5*(u_velocity(j + 1,i + 1) + u_velocity(j + 1,i + 1));
             u_bottom = 0.5*(u_velocity(j + 1,i + 1) + u_velocity(j,i + 1));
             % v-velocities at the left and right wall of a CV (interpolation)
-            v_left = 0.5*(u_velocity(j + 1,i + 2) + u_velocity(j + 1,i + 1));
-            v_right = 0.5*(u_velocity(j + 1,i + 1) + u_velocity(j + 1,i));
+            v_left = 0.5*(v_velocity(j + 1,i + 2) + v_velocity(j + 1,i + 1));
+            v_right = 0.5*(v_velocity(j + 1,i + 1) + v_velocity(j + 1,i));
             du_dy = (u_top - u_bottom)/dy;
             dv_dx = (v_right - v_left)/dx;
             % Temperature gradients
@@ -85,10 +85,10 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             convectionSource = 0;
             if xPos > heatSourceStart && xPos < heatSourceEnd
                convectionSource = convectionCoeff*(flameTemperature);
-               currTempCoeff = currTimeCoeff + convectionCoeff;
+               currTempCoeff = currTempCoeff + convectionCoeff;
             end
             bodySource = 0;
-            discretizedRHS = thermalCond*(d2T_dx2 + d2T_dy2) + 2*viscosity*du_dx*du_dx + viscosity*(du_dy + dv_dx)*(du_dy + dv_dx)...
+            discretizedRHS = thermalCond(oldTemperatureField(j,i))*(d2T_dx2 + d2T_dy2) + 2*viscosity*du_dx*du_dx + viscosity*(du_dy + dv_dx)*(du_dy + dv_dx)...
                 + 2*viscosity*dv_dy*dv_dy + convectionSource + bodySource;
             temperatureField(j,i) = (oldTemperatureField(j,i) + dt*discretizedRHS/(density*specificHeat))/currTempCoeff;
         end

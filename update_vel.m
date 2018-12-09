@@ -14,8 +14,8 @@ function [u_new, v_new] = update_vel(pseudo_u, pseudo_v, p, delta_t, ...
     
     % Calculate correct velocity components using pressure at next time
     % step for all nodes except boundary & ghost nodes
-    for j=2:size(v,1)         % Rows: 1 to n+1  (y nodes)
-        for i = 2:size(u,2)   % Columns: 1 to m+1  (x nodes)
+    for j=2:size(pseudo_v,1)         % Rows: 1 to n+1  (y nodes)
+        for i = 2:size(pseudo_u,2)   % Columns: 1 to m+1  (x nodes)
             
             u_new(j,i) = pseudo_u(j,i) - delta_t*(p(j,i) - p(j,i-1));
             v_new(j,i) = pseudo_v(j,i) - delta_t*(p(j,i) - p(j-1,i));

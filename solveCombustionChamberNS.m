@@ -33,6 +33,9 @@ function [] = solveCombustionChamberNS()
     viscosity = 2.934e-5;
     specificHeat = 1044;
     convectionCoeff = 35.45;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
+    % source - http://bouteloup.pierre.free.fr/lica/phythe/don/air/air_k_plot.pdf
+    thermalCond = @(T)(1.5207e-11*T*T*T - 4.8574e-08*T*T + 1.0184e-04*T - 3.9333e-04);
+;
     % Discretization
     % Control volume centers correspond to pressure/temperature nodes
     % Velocity nodes are staggered wrt these nodes
@@ -70,10 +73,10 @@ function [] = solveCombustionChamberNS()
     % u-velocities at the left inlets
     u_velocity(:,1) = leftInletVelocity;
     % u-velocities at the top and bottom walls
-    uVelTopWall = zeros(numControlVols_y + 2, numControlVols_x + 1);
+    uVelTopWall = zeros(1,numControlVols_x + 1);
     uVelBottomWall = uVelTopWall;
     numUNodes_x = size(u_velocity,2);
-    x = 0;
+%     x = 0;
     inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
     for i = 1:numUNodes_x
         x = (i - 1)*dx;
@@ -90,7 +93,7 @@ function [] = solveCombustionChamberNS()
     
     % Parameters for Gauss-Seidel with SOR
     sor_factor = 1.8;
-    epsilon = 1e-6;
+    epsilon = 1e-4;
     
     currTime = 0;
     while currTime < maxTime
@@ -108,8 +111,8 @@ function [] = solveCombustionChamberNS()
                                                     uVelBottomWall, uVelTopWall);
                                                 
         % Solving the energy equation for the temperature field
-        temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity, pressureField,viscosity,density,specificHeat,...
-                        convectionCoeff,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt);
+        temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity,viscosity,density,specificHeat,...
+                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt);
                             
         currTime = currTime + dt;
     end
