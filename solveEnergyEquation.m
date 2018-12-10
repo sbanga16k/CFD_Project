@@ -36,6 +36,12 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             % Velocity gradients
             du_dx = (u_velocity(j + 1,i + 1) - u_velocity(j + 1,i))/dx;
             dv_dy = (v_velocity(j + 1,i + 1) - v_velocity(j,i + 1))/dx;
+            
+            % Velocity gradients (Advective terms)
+            du_dx = (u_rightWall - u_leftWall)/dx;
+            du_dy = (u_topWall - u_bottomWall)/dy;
+            
+            
             % u-velocities at the top and bottom wall of a CV (interpolation)
             u_top = 0.5*(u_velocity(j + 1,i + 1) + u_velocity(j + 1,i + 1));
             u_bottom = 0.5*(u_velocity(j + 1,i + 1) + u_velocity(j,i + 1));

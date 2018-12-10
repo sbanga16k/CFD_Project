@@ -5,7 +5,7 @@
 % function [] = solveCombustionChamberNS()
     clear; clc;
     maxTime = 2;
-    dt = 1e-2;
+    dt = 1e-4;
     g_x = 0;
     g_y = -9.81;                                                            % gravitational constant
     % Domain parameters
@@ -15,7 +15,7 @@
     inletTemperature = 270;                                                 % Temperature at the left inlet
     inletPressure = 101325;                                                 % Inlet pressure to the chamber is 1 atm
     recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
-    recirculation_vVel = 25;                                                % v-velocity at the recirculation inlets
+    recirculation_vVel = 5;                                                % v-velocity at the recirculation inlets
     numRecirculationInlets = 4;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
                                                                             % Each row represents the start and end of the inlet
@@ -57,6 +57,7 @@
     % Handling the boundaries
     % Setting up the inlet velocities
     u_velocity(:,1) = leftInletVelocity;
+    u_velocity(2:end - 1,2:end - 1) = leftInletVelocity;
     numVNodes_x = size(v_velocity,2);
     x = dx/2;
     inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
@@ -69,32 +70,38 @@
         if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
             v_velocity(end,i) = -recirculation_vVel;                        % Top wall inlet
             v_velocity(1,i) = recirculation_vVel;                           % Top wall inlet
+%             % TEMP
+%             v_velocity(end,i) = 0;                        % Top wall inlet
+%             v_velocity(1,i) = 0;                           % Top wall inlet
         end
     end
     % u-velocities at the left inlets
     u_velocity(:,1) = leftInletVelocity;
+    
     % u-velocities at the top and bottom walls
     uVelTopWall = zeros(1,numControlVols_x + 1);
     uVelBottomWall = uVelTopWall;
     numUNodes_x = size(u_velocity,2);
-%     x = 0;
-    inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
-    for i = 1:numUNodes_x
-        x = (i - 1)*dx;
-        if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
-            inletLocIter = inletLocIter + 1;
-        end
-        if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
-            uVelTopWall(i) = recirculation_uVel;                            % At the top wall inlet
-            uVelBottomWall(i) = recirculation_uVel;                         % At the bottom wall inlet
-        end
-    end
+    % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
+% %     x = 0;
+%     inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
+%     for i = 1:numUNodes_x
+%         x = (i - 1)*dx;
+%         if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
+%             inletLocIter = inletLocIter + 1;
+%         end
+%         if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
+%             uVelTopWall(i) = recirculation_uVel;                            % At the top wall inlet
+%             uVelBottomWall(i) = recirculation_uVel;                         % At the bottom wall inlet
+%         end
+%     end
+
     % Temperature at the inlet
     temperatureField(:,1) = inletTemperature;
     
     % Parameters for Gauss-Seidel with SOR
     sor_factor = 1.9397;
-    epsilon = 1e-1;
+    epsilon = 1e-2;
     
     currTime = dt;
     while currTime < maxTime
@@ -118,4 +125,7 @@
         disp(strcat("Current time: ",num2str(currTime)));
         currTime = currTime + dt;
     end
+    
+    plotResults(u_velocity, v_velocity, pressureField, temperatureField, domainLength,domainWidth,dx,dy);
+    
 % end

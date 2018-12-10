@@ -60,7 +60,9 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
                 % Bottom wall (TODO - inlet)
                 if j == 2
                     % Inlet exists at the bottom wall
+                    % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
                     if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
+%                     if false
                         p_bottom = 2*p_inlet;      % At the bottom wall inlet
                         currNodeCoeff = currNodeCoeff + 1/(delta_y*delta_y);
                     else
@@ -72,8 +74,10 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
                 end
                 % Top wall (TODO - inlet)
                 if j == size(pseudo_v, 1)
+                    % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
                     % Inlet exists at the top wall
                     if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
+%                    if false 
                         p_top = 2*p_inlet;         % At the top wall inlet
                         currNodeCoeff = currNodeCoeff + 1/(delta_y*delta_y);
                     else
