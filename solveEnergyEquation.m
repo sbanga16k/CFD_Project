@@ -102,6 +102,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
 %                convectionSource = convectionCoeff*(flameTemperature);
 %                currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
 %             end
+
             % NEW heat source formulation
             % Source dies down along the length
 %             heatSourceStart_y = heatSourceLocation(3)
@@ -111,7 +112,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
 %                 currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
             end
             bodySource = -v_velocity(j + 1,i + 1)*(9.81);
-            K = 100*thermalCond(oldTemperatureField(j,i));
+            K = 1000*thermalCond(oldTemperatureField(j,i));
             discretizedRHS = K*(d2T_dx2 + d2T_dy2) + 2*viscosity*du_dx*du_dx + viscosity*(du_dy + dv_dx)*(du_dy + dv_dx)...
                 + 2*viscosity*dv_dy*dv_dy + convectionSource + bodySource;
 %             % TEMP
@@ -121,110 +122,6 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             temperatureField(j,i) = (oldTemperatureField(j,i) + dt*discretizedRHS/(density*specificHeat))/currTempCoeff;
         end
     end
-    
-    
-% % NEW FOR CRANK_NICOLSON
-%     % Building the rhs vector for solving the linear system corresponding to CN
-%     numNodes_x = size(oldTemperatureField,2);
-%     numNodes_y = size(oldTemperatureField,1);
-%     totalNodes = numNodes_x*numNodes_y;
-%     rhsVector = zeros(totalNodes,1);
-%     rhsRowIdx = 1;
-%     for j = 1:numNodes_y
-%         inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
-%         yPos = dy/2 + (j - 1)*dy;                                               % y-coordinate of the pressure/temperature nodes (center of CV)
-%         for i = 1:numNodes_x
-%            rhsToAdd = 0;
-%            K = 50*thermalCond(oldTemperatureField(j,i));
-%            xPos = dx/2 + (i - 1)*dx;                                           % x-coordinate of the pressure/temperature nodes (center of CV)
-%             if inletLocIter < numRecirculationInlets && xPos > inletLocations(inletLocIter, 2)
-%                 inletLocIter = inletLocIter + 1;
-%             end
-%             % Velocity gradients
-%             du_dx = (u_velocity(j + 1,i + 1) - u_velocity(j + 1,i))/dx;
-%             dv_dy = (v_velocity(j + 1,i + 1) - v_velocity(j,i + 1))/dx;
-%             
-%             
-%             % u-velocities at the top and bottom wall of a CV (interpolation)
-%             u_top = 0.25*(u_velocity(j + 1,i + 1) + u_velocity(j + 1,i) + u_velocity(j + 2,i) + u_velocity(j + 2,i + 1));
-%             u_bottom = 0.25*(u_velocity(j + 1,i + 1) + u_velocity(j,i + 1) + u_velocity(j,i) + u_velocity(j + 1,i));
-%             
-%             % v-velocities at the left and right wall of a CV (interpolation)
-%             v_left = 0.25*(v_velocity(j + 1,i + 1) + v_velocity(j,i + 1) + v_velocity(j,i) + v_velocity(j,i + 1));
-%             v_right = 0.25*(v_velocity(j + 1,i + 1) + v_velocity(j + 1,i + 2) + v_velocity(j,i + 2) + v_velocity(j,i + 1));
-%             du_dy = (u_top - u_bottom)/dy;
-%             dv_dx = (v_right - v_left)/dx;
-%             % Temperature gradients
-%             % Bottom wall
-%             if j == 1
-%                 T_bottom = oldTemperatureField(j,i);
-%                 % Checking for an inlet
-%                 if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
-%                     T_bottom = 2*inletTemperature - oldTemperatureField(j,i);
-%                     rhsToAdd = rhsToAdd - 2*inletTemperature*K*dt/(density*specificHeat*dy*dy);
-%                 end
-%             else
-%                 T_bottom = oldTemperatureField(j - 1,i);
-%             end
-%             % Top wall
-%             if j == numInternalNodes_y
-%                 T_top = oldTemperatureField(j,i);
-%                 % Checking for an inlet
-%                 if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
-%                     T_top = 2*inletTemperature - oldTemperatureField(j,i);
-%                     rhsToAdd = rhsToAdd - 2*inletTemperature*K*dt/(density*specificHeat*dy*dy);
-%                 end
-%             else
-%                 T_top = oldTemperatureField(j + 1,i);
-%             end
-%             % Left wall (inlet)
-%             if i == 1
-%                 T_left = 2*inletTemperature - oldTemperatureField(j,i);
-%                 rhsToAdd = rhsToAdd - 2*inletTemperature*K*dt/(density*specificHeat*dx*dx);
-%             else
-%                 T_left = oldTemperatureField(j,i - 1);
-%             end
-%             % Right wall (zero gradient condition)
-%             if i == numInternalNodes_x
-%                 T_right = oldTemperatureField(j,i);
-%             else
-%                 T_right = oldTemperatureField(j,i + 1);
-%             end
-%             d2T_dx2 = (T_right - 2*oldTemperatureField(j,i) + T_left)/(dx*dx);
-%             d2T_dy2 = (T_top - 2*oldTemperatureField(j,i) + T_bottom)/(dy*dy);
-%             
-%             currTempCoeff = 1;                          % Coefficient of the current node temperature (Tji)
-%             % Evaluating the new temperature at (i,j)
-%             convectionSource = 0;
-%             % CHECK CONVECTION TERM
-%             if xPos > heatSourceStart_x && xPos < heatSourceEnd_x && ...
-%                     yPos > heatSourceStart_y && yPos < heatSourceEnd_y
-%                convectionSource = convectionCoeff*(flameTemperature - oldTemperatureField(j,i));
-% %                currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
-%             end
-%             bodySource = 0;
-%             
-%             discretizedRHS = K*0.5*(d2T_dx2 + d2T_dy2) + 2*viscosity*du_dx*du_dx + viscosity*(du_dy + dv_dx)*(du_dy + dv_dx)...
-%                 + 2*viscosity*dv_dy*dv_dy + convectionSource + bodySource;
-%             discretizedRHS = oldTemperatureField(j,i) + dt*discretizedRHS/(density*specificHeat);
-%             rhsToAdd = rhsToAdd + discretizedRHS;
-% %             temperatureField(j,i) = (oldTemperatureField(j,i) + dt*discretizedRHS/(density*specificHeat))/currTempCoeff;
-%             rhsVector(rhsRowIdx) = rhsToAdd;
-%             rhsRowIdx = rhsRowIdx + 1;
-%         end
-%     end
-%     
-%     % Solving the system for CN
-%     temperaturesVector = coeffMatrix\rhsVector;
-%     
-%     % Converting the temperature vector to a matrix
-%     rowIdx = 1;
-%     for j = 1:numNodes_y
-%         for i = 1:numNodes_x
-%             temperatureField(j,i) = temperaturesVector(rowIdx);
-%             rowIdx = rowIdx + 1;
-%         end
-%     end
-    
+        
 
 end

@@ -34,7 +34,7 @@
     density = 0.6158;
     viscosity = 2.934e-5;
     specificHeat = 1044;
-    convectionCoeff = 35.45;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
+    convectionCoeff = 35.45*5;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
     % Reynolds number
     Re = density*leftInletVelocity*domainWidth/viscosity;
     
