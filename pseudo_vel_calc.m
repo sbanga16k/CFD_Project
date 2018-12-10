@@ -1,7 +1,7 @@
  % Function for solving the intermediate x, y velocity components using the 
 % momentum equation employing primite variable formulation
 function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, inletLocations,recirculation_uVel,...
-    u_bot_nozzles, u_top_nozzles, dx, dy, dt, mu, density, g_x, g_y)
+    u_bot_nozzles, u_top_nozzles, dx, dy, dt, mu, density, g_x, g_y,inletPresent)
     % Shape of u: (n+2) x (m+1)
     % Shape of v: (n+1) x (m+2)
     
@@ -149,7 +149,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, inletLocations,recirculati
             if j == 2
                 u_bottom = -u_curr;
                 % Checking for an inlet
-                if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
                     u_bottom = 2*recirculation_uVel - u_curr;
                 end
             end
@@ -157,7 +157,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, inletLocations,recirculati
             if j == numUNodes_y - 1
                 u_top = -u_curr;
                 % Checking for an inlet
-                if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
                     u_top = 2*recirculation_uVel - u_curr;
                 end
             end
@@ -237,7 +237,7 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, inletLocations,recirculati
 %             v_top_pNode = v(j + 1,i);
 %             v_bottom_pNode = v(j - 1,j);
 
-            % Checking for BCs (TODO - inlet)
+            % Checking for BCs
             % LEFT (inlet)
             if i == 2
                 v_left = -v_curr;

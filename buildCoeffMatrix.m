@@ -1,7 +1,7 @@
 %  Building a sparse matrix for solving linear system, Ax = b (Energy equation)
 %  Generates the coefficient matrix(A)
 %  Flags are used to check if flux is specified at any boundary
-%  coefficient = dt/(density*specificHeat)
+%  coefficient = K*dt/(density*specificHeat)
 % TODO - CHECK MATRIX INVERTIBILITY
 function [coeffMatrix] = buildCoeffMatrix(coefficient,temperature, dx, dy)
     numNodes_x = size(temperature,2);
@@ -24,31 +24,31 @@ function [coeffMatrix] = buildCoeffMatrix(coefficient,temperature, dx, dy)
                 % Left boundary is inlet
                 coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx) - x_coeff;
             else
-                coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx - 1) + x_coeff;
+                coeffMatrix(rowIdx,currIdx - 1) = coeffMatrix(rowIdx,currIdx - 1) + x_coeff;
             end
             % T(i + 1, j), RIGHT
             if xIdx == numNodes_x
                 % Zero gradient condition at right outlet
                 coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx) + x_coeff;
             else
-                coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx + 1) + curr_coeff;
+                coeffMatrix(rowIdx,currIdx + 1) = coeffMatrix(rowIdx,currIdx + 1) + curr_coeff;
             end
             % u(i, j - 1), BOTTOM (TODO - inlet)
             if yIdx == 1
                 % Zero gradient condition at right outlet
                 coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx) + y_coeff;
             else
-                coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx - numNodes_x) + y_coeff;
+                coeffMatrix(rowIdx,currIdx - numNodes_x) = coeffMatrix(rowIdx,currIdx - numNodes_x) + y_coeff;
             end
             % u(i, j + 1), TOP (TODO - inlet)
             if yIdx == numNodes_y
                 % Zero gradient condition at right outlet
                 coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx) + y_coeff;
             else
-                coeffMatrix(rowIdx,currIdx) = coeffMatrix(rowIdx,currIdx + numNodes_x) + y_coeff;
+                coeffMatrix(rowIdx,currIdx + numNodes_x) = coeffMatrix(rowIdx,currIdx + numNodes_x) + y_coeff;
             end
+            rowIdx = rowIdx + 1;
         end
-        rowIdx = rowIdx + 1;
     end
 end
 

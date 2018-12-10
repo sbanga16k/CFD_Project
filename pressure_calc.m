@@ -3,7 +3,7 @@
 % Successive over-relaxation (SOR)
 function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
     p_inlet, inletLocations, p_bot_nozzles,density, ...
-    delta_x, delta_y, delta_t, sor_factor, epsilon)
+    delta_x, delta_y, delta_t, sor_factor, epsilon, inletPresent)
     % Shape of pseudo_u: (n+2) x (m+1)
     % Shape of pseudo_v: (n+1) x (m+2)
     % Shape of pressure: (n+2) x (m+2)
@@ -15,7 +15,9 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
     % previous time step
 %     pressure_new = zeros(size(pressure));
     pressure_new = pressure;
-
+    numNodes_x = size(pressure, 2);
+    numNodes_y = size(pressure, 1);
+    
     % Stores max error in the matrix for testing algo convergence
     max_error = 100;
 
@@ -24,10 +26,10 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
     % Iterating over all the interior nodes to update the phi values till the
     % algo converges
     while max_error > epsilon
-        for j = 2:size(pseudo_v, 1)
+        for j = 2:numNodes_y - 1
             xPos = delta_x/2;                        % x-coordinate of pressure node
             inletLocIter = 1;
-            for i = 2:size(pseudo_u, 2)
+            for i = 2:numNodes_x - 1
                 currNodeCoeff = (2.0 / (delta_x*delta_x)) + (2.0 / (delta_y*delta_y));  % Coefficient of P_j,i
                 xPos = delta_x/2 + (i - 2)*delta_x;
                 if inletLocIter < numRecirculationInlets && xPos > inletLocations(inletLocIter, 2)
@@ -57,12 +59,11 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
                 else
                     p_right = pressure(j, i + 1);           % Zero gradient condition
                 end
-                % Bottom wall (TODO - inlet)
+                % Bottom wall
                 if j == 2
                     % Inlet exists at the bottom wall
                     % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
-                    if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
-%                     if false
+                    if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
                         p_bottom = 2*p_inlet;      % At the bottom wall inlet
                         currNodeCoeff = currNodeCoeff + 1/(delta_y*delta_y);
                     else
@@ -76,8 +77,7 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
                 if j == size(pseudo_v, 1)
                     % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
                     % Inlet exists at the top wall
-                    if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
-%                    if false 
+                    if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
                         p_top = 2*p_inlet;         % At the top wall inlet
                         currNodeCoeff = currNodeCoeff + 1/(delta_y*delta_y);
                     else
@@ -126,6 +126,7 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
         max_error = max(max(abs(pressure_new(2:end-1,2:end-1) - pressure(2:end-1,2:end-1))));
         pressure = pressure_new;
     end
+    
     % Updating the pressure ghost nodes
     % Left wall (Average should be equal to inlet pressure)
     pressure_new(:,1) = 2*p_inlet*ones(numel(pressure_new(:,2)),1) - pressure_new(:,2);
@@ -141,9 +142,9 @@ function [pressure_new] = pressure_calc(pressure, pseudo_u, pseudo_v,...
         if inletLocIter < numRecirculationInlets && xPos > inletLocations(inletLocIter, 2)
             inletLocIter = inletLocIter + 1;
         end
-        if xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
-            pressure_new(end,:) = 2*p_inlet*ones(1,numel(pressure_new(end,:))) - pressure_new(end - 1,:);                       % At the top wall inlet
-            pressure_new(1,:) = 2*p_inlet*ones(1,numel(pressure_new(1,:))) - pressure_new(2,:);                       % At the bottom wall inlet
+        if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
+            pressure_new(end,:) = 2*p_inlet - pressure_new(end - 1,:);                       % At the top wall inlet
+            pressure_new(1,:) = 2*p_inlet - pressure_new(2,:);                       % At the bottom wall inlet
         else
             % No inlet (zero gradient)
             pressure_new(end,:) = pressure_new(end - 1,:);    % Top wall

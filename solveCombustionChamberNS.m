@@ -11,10 +11,10 @@
     % Domain parameters
     domainLength = 3;
     domainWidth = 1;
-    leftInletVelocity = 25;
+    leftInletVelocity = 10;
     inletTemperature = 270 + 273.13;                                                 % Temperature at the left inlet
     inletPressure = 101325;                                                 % Inlet pressure to the chamber is 1 atm
-    recirculation_uVel = 5;                                                 % u-velocity at the recirculation inlets
+    recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
     recirculation_vVel = 5;                                                % v-velocity at the recirculation inlets
     numRecirculationInlets = 4;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
@@ -28,12 +28,16 @@
     inletLocations(4,:) = [domainLength/3 + 3*7*domainLength/60, domainLength/3 + 3*7*domainLength/60 + inletSize];
     % Heat source location (between 0.1*domainLength and 0.2*domainLength)
     heatSourceLocation = [0.1*domainLength, 0.2*domainLength,0.35*domainWidth,0.65*domainWidth];
+    flameStart_x = heatSourceLocation(1);
     % Physical properties of air (taken at 300C)
     % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
     density = 0.6158;
     viscosity = 2.934e-5;
     specificHeat = 1044;
     convectionCoeff = 35.45;                                                % source - https://www.engineeringtoolbox.com/convective-heat-transfer-d_430.html
+    % Reynolds number
+    Re = density*leftInletVelocity*domainWidth/viscosity;
+    
     % source - http://bouteloup.pierre.free.fr/lica/phythe/don/air/air_k_plot.pdf
     thermalCond = @(T)(1.5207e-11*T*T*T - 4.8574e-08*T*T + 1.0184e-04*T - 3.9333e-04);
 
@@ -42,19 +46,22 @@
     % Velocity nodes are staggered wrt these nodes
     % u-velocity nodes are staggered dx/2 to the right, v-velocity nodes
     % are staggered dy/2 to the top
-    numControlVols_x = 20;                    
+    numControlVols_x = 50;                    
     numControlVols_y = 20;
     dx = domainLength/numControlVols_x;
     dy = domainWidth/numControlVols_y;
     % Allocating the required problem variables
-    pressureField = zeros(numControlVols_x + 2, numControlVols_y + 2);      % Pressure matrix includes ghost nodes too
+    pressureField = zeros(numControlVols_y + 2, numControlVols_x + 2);      % Pressure matrix includes ghost nodes too
     pressureField(:,1) = inletPressure;                                     % Setting the ghost nodes to the left of left wall
     pressureField(:,2) = inletPressure;                                     % and the first set of internal nodes to the inlet pressure
-    temperatureField = 273.13*ones(numControlVols_y, numControlVols_x);
+    temperatureField = inletTemperature*ones(numControlVols_y, numControlVols_x);
     u_velocity = zeros(numControlVols_y + 2, numControlVols_x + 1);         % u-velocity nodes located at the left and right walls of a CV
     v_velocity = zeros(numControlVols_y + 1, numControlVols_x + 2);         % v-velocity nodes located at the bottom and top walls of a CV
     
     % Handling the boundaries
+    % TEMP -  to debug effect of inlet
+    inletPresent = true;
+
     % Setting up the inlet velocities
     u_velocity(:,1) = leftInletVelocity;
     u_velocity(2:end - 1,2:end - 1) = leftInletVelocity;
@@ -67,7 +74,7 @@
         if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
             inletLocIter = inletLocIter + 1;
         end
-        if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
+        if inletPresent && x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
             v_velocity(end,i) = -recirculation_vVel;                        % Top wall inlet
             v_velocity(1,i) = recirculation_vVel;                           % Top wall inlet
 %             % TEMP
@@ -90,7 +97,7 @@
         if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
             inletLocIter = inletLocIter + 1;
         end
-        if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
+        if inletPresent && x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
             uVelTopWall(i) = recirculation_uVel;                            % At the top wall inlet
             uVelBottomWall(i) = recirculation_uVel;                         % At the bottom wall inlet
         end
@@ -103,21 +110,23 @@
     sor_factor = 1.9397;
     epsilon = 1e-2;
     
+    
     % Building the coefficient matrix to solve the Energy equation using
     % Crank-Nicolson
+    K_initial = thermalCond(inletTemperature);
     coefficient = thermalCond(inletTemperature)*dt/(density*specificHeat);
     coeffMatrix = buildCoeffMatrix(coefficient,temperatureField, dx, dy);
-    
+    coeffMatInv = inv(coeffMatrix);
     currTime = dt;
     while currTime < maxTime
         % Solving for intermediate velocity field
         [intermediate_u_vel, intermediate_v_vel] = pseudo_vel_calc(u_velocity, v_velocity, inletLocations,recirculation_uVel,...
-                                uVelBottomWall, uVelTopWall, dx, dy, dt, viscosity, density, g_x, g_y);
+                                uVelBottomWall, uVelTopWall, dx, dy, dt, viscosity, density, g_x, g_y, inletPresent);
         % Solving for the pressure at the new time step using the
         % intermediate velocity field
         pressureField = pressure_calc(pressureField, intermediate_u_vel, intermediate_v_vel,...
                             inletPressure, inletLocations, inletLocations, density, ...
-                            dx, dy, dt, sor_factor, epsilon);
+                            dx, dy, dt, sor_factor, epsilon, inletPresent);
         
         % Solving for the new velocity field using the pressure field
         [u_velocity, v_velocity] = update_vel(intermediate_u_vel, intermediate_v_vel, pressureField, dt,dx,dy, ...
@@ -125,9 +134,11 @@
                                                 
         % Solving the energy equation for the temperature field
         temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity,viscosity,density,specificHeat,...
-                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,coeffMatrix,dx,dy,dt);
+                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,coeffMatrix,dx,dy,dt, inletPresent);
                             
         disp(strcat("Current time: ",num2str(currTime)));
+%         % Updating the heat source location (x) as the flame spreads with time
+%         heatSourceLocation(2) = *exp
         currTime = currTime + dt;
     end
     

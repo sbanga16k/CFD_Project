@@ -22,7 +22,8 @@ function [] = plotResults(u_velocity, v_velocity, pressureField, temperature, do
     yScalar = dy/2:dy:domainWidth;
     [X_scalar,Y_scalar] = meshgrid(xScalar,yScalar);
     figure;
-    contourf(X_scalar,Y_scalar,temperature);%'ShowText', 'on');
+    [c,h] = contourf(X_scalar,Y_scalar,temperature,50);%'ShowText', 'on');
+    set(h,'LineColor','none')
     xlabel('x', 'Interpreter', 'latex');
     ylabel('y', 'Interpreter', 'latex');
     title('Temperatures at t = 2s', 'Interpreter', 'latex');
