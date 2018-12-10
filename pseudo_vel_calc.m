@@ -1,6 +1,6 @@
  % Function for solving the intermediate x, y velocity components using the 
 % momentum equation employing primite variable formulation
-function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
+function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, inletLocations,recirculation_uVel,...
     u_bot_nozzles, u_top_nozzles, dx, dy, dt, mu, density, g_x, g_y)
     % Shape of u: (n+2) x (m+1)
     % Shape of v: (n+1) x (m+2)
@@ -120,11 +120,19 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
     
     
     % NEW
+    numRecirculationInlets = size(inletLocations,1);
     % x-momentum equation
+    xPos = 0;
     numUNodes_x = size(u,2);
     numUNodes_y = size(u,1);
     for j = 2:numUNodes_y - 1
+        inletLocIter = 1;
         for i = 2:numUNodes_x - 1
+            xPos = (i - 1)*dx;                                              % x-coordinate of u-velocity node
+            if inletLocIter < numRecirculationInlets && xPos > inletLocations(inletLocIter, 2)
+                inletLocIter = inletLocIter + 1;
+            end
+
             % u-velocities at the walls of the CV
 %             u_rightWall = u(j,i);
 %             u_leftWall = u(j,i - 1);
@@ -140,10 +148,18 @@ function [pseudo_u, pseudo_v] = pseudo_vel_calc(u, v, ...
             % BOTTOM (no slip)
             if j == 2
                 u_bottom = -u_curr;
+                % Checking for an inlet
+                if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                    u_bottom = 2*recirculation_uVel - u_curr;
+                end
             end
             % TOP (no slip)
             if j == numUNodes_y - 1
                 u_top = -u_curr;
+                % Checking for an inlet
+                if xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                    u_top = 2*recirculation_uVel - u_curr;
+                end
             end
             % RIGHT (zero gradient)
             if i == numUNodes_x - 1

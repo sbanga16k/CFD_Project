@@ -12,9 +12,9 @@
     domainLength = 3;
     domainWidth = 1;
     leftInletVelocity = 25;
-    inletTemperature = 270;                                                 % Temperature at the left inlet
+    inletTemperature = 270 + 273.13;                                                 % Temperature at the left inlet
     inletPressure = 101325;                                                 % Inlet pressure to the chamber is 1 atm
-    recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
+    recirculation_uVel = 5;                                                 % u-velocity at the recirculation inlets
     recirculation_vVel = 5;                                                % v-velocity at the recirculation inlets
     numRecirculationInlets = 4;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
@@ -27,7 +27,7 @@
     inletLocations(3,:) = [domainLength/3 + 2*7*domainLength/60, domainLength/3 + 2*7*domainLength/60 + inletSize];
     inletLocations(4,:) = [domainLength/3 + 3*7*domainLength/60, domainLength/3 + 3*7*domainLength/60 + inletSize];
     % Heat source location (between 0.1*domainLength and 0.2*domainLength)
-    heatSourceLocation = [domainLength/10, domainLength/5];
+    heatSourceLocation = [0.1*domainLength, 0.2*domainLength,0.35*domainWidth,0.65*domainWidth];
     % Physical properties of air (taken at 300C)
     % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
     density = 0.6158;
@@ -50,7 +50,7 @@
     pressureField = zeros(numControlVols_x + 2, numControlVols_y + 2);      % Pressure matrix includes ghost nodes too
     pressureField(:,1) = inletPressure;                                     % Setting the ghost nodes to the left of left wall
     pressureField(:,2) = inletPressure;                                     % and the first set of internal nodes to the inlet pressure
-    temperatureField = zeros(numControlVols_y, numControlVols_x);
+    temperatureField = 273.13*ones(numControlVols_y, numControlVols_x);
     u_velocity = zeros(numControlVols_y + 2, numControlVols_x + 1);         % u-velocity nodes located at the left and right walls of a CV
     v_velocity = zeros(numControlVols_y + 1, numControlVols_x + 2);         % v-velocity nodes located at the bottom and top walls of a CV
     
@@ -82,19 +82,19 @@
     uVelTopWall = zeros(1,numControlVols_x + 1);
     uVelBottomWall = uVelTopWall;
     numUNodes_x = size(u_velocity,2);
-    % TEMP - CHECKING WITHOUT RECIRCULATION INLETS
-% %     x = 0;
-%     inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
-%     for i = 1:numUNodes_x
-%         x = (i - 1)*dx;
-%         if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
-%             inletLocIter = inletLocIter + 1;
-%         end
-%         if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
-%             uVelTopWall(i) = recirculation_uVel;                            % At the top wall inlet
-%             uVelBottomWall(i) = recirculation_uVel;                         % At the bottom wall inlet
-%         end
-%     end
+%     TEMP - CHECKING WITHOUT RECIRCULATION INLETS
+    x = 0;
+    inletLocIter = 1;                                                       % Used to index into the inletLocations matrix
+    for i = 1:numUNodes_x
+        x = (i - 1)*dx;
+        if inletLocIter < numRecirculationInlets && x > inletLocations(inletLocIter, 2)
+            inletLocIter = inletLocIter + 1;
+        end
+        if x > inletLocations(inletLocIter,1) && x < inletLocations(inletLocIter,2)
+            uVelTopWall(i) = recirculation_uVel;                            % At the top wall inlet
+            uVelBottomWall(i) = recirculation_uVel;                         % At the bottom wall inlet
+        end
+    end
 
     % Temperature at the inlet
     temperatureField(:,1) = inletTemperature;
@@ -103,10 +103,15 @@
     sor_factor = 1.9397;
     epsilon = 1e-2;
     
+    % Building the coefficient matrix to solve the Energy equation using
+    % Crank-Nicolson
+    coefficient = thermalCond(inletTemperature)*dt/(density*specificHeat);
+    coeffMatrix = buildCoeffMatrix(coefficient,temperatureField, dx, dy);
+    
     currTime = dt;
     while currTime < maxTime
         % Solving for intermediate velocity field
-        [intermediate_u_vel, intermediate_v_vel] = pseudo_vel_calc(u_velocity, v_velocity, ...
+        [intermediate_u_vel, intermediate_v_vel] = pseudo_vel_calc(u_velocity, v_velocity, inletLocations,recirculation_uVel,...
                                 uVelBottomWall, uVelTopWall, dx, dy, dt, viscosity, density, g_x, g_y);
         % Solving for the pressure at the new time step using the
         % intermediate velocity field
@@ -120,7 +125,7 @@
                                                 
         % Solving the energy equation for the temperature field
         temperatureField = solveEnergyEquation(temperatureField, u_velocity, v_velocity,viscosity,density,specificHeat,...
-                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,dx,dy,dt);
+                        convectionCoeff,thermalCond,heatSourceLocation,inletLocations,inletTemperature,coeffMatrix,dx,dy,dt);
                             
         disp(strcat("Current time: ",num2str(currTime)));
         currTime = currTime + dt;
