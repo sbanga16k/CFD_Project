@@ -1,4 +1,5 @@
-function [] = plotResults(u_velocity, v_velocity, pressureField, temperature, domainLength, domainWidth,dx,dy)
+function [] = plotResults(u_velocity, v_velocity, pressureField, ...
+    temperature, domainLength, domainWidth,dx,dy,numRecirculationInlets)
     % Pre-processing to generate contours
 %     [numRows, numCols] = size(u_velocity(:,2:end-1));
 %     numNodes_x = numCols; numNodes_y = numRows;
@@ -44,7 +45,7 @@ function [] = plotResults(u_velocity, v_velocity, pressureField, temperature, do
     hold on;
     xlabel('x', 'Interpreter', 'latex');
     ylabel('y', 'Interpreter', 'latex');
-    title('Velocity vectors at t = 2s (3 inlets)', 'Interpreter', 'latex');
+    title(strcat('Velocity vectors for ',num2str(numRecirculationInlets),' inlets'), 'Interpreter', 'latex');
     axis([-0.5,3.5,0,1]);
     % Plotting the temperature field
 %     temperature = temperature(2:end - 1,2:end - 1);
@@ -56,15 +57,16 @@ function [] = plotResults(u_velocity, v_velocity, pressureField, temperature, do
     set(h,'LineColor','none')
     xlabel('x', 'Interpreter', 'latex');
     ylabel('y', 'Interpreter', 'latex');
-    title('Temperatures at t = 2s', 'Interpreter', 'latex');
+    title(strcat('Temperature contours for ',num2str(numRecirculationInlets),' inlets'), 'Interpreter', 'latex');
 
-    % Plotting the temperaatures at the outlet
+    % Plotting the temperatures at the outlet
     figure;
     outletTemperature = temperature(:,end);
     plot(y,outletTemperature);
-    title('Temperature distribution at the outlet','Interpreter', 'latex');
+    title(strcat('Outlet temperature distribution for ',num2str(numRecirculationInlets),' inlets'),'Interpreter', 'latex');
     xlabel('y','Interpreter', 'latex');
     ylabel('Outlet Temperature (C)','Interpreter', 'latex');
+    ylim([250, 950]);
 %     axis([0,1,0,650]);
     
 %     % Streamlines
