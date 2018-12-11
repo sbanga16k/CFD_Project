@@ -62,7 +62,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             if j == 1
                 T_bottom = oldTemperatureField(j,i);
                 % Checking for an inlet
-                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
                     T_bottom = 2*inletTemperature - oldTemperatureField(j,i);
                 end
             else
@@ -72,7 +72,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
             if j == numInternalNodes_y
                 T_top = oldTemperatureField(j,i);
                 % Checking for an inlet
-                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos > inletLocations(inletLocIter,2)
+                if inletPresent && xPos > inletLocations(inletLocIter,1) && xPos < inletLocations(inletLocIter,2)
                     T_top = 2*inletTemperature - oldTemperatureField(j,i);
                 end
             else
@@ -108,7 +108,9 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
 %             heatSourceStart_y = heatSourceLocation(3)
 %             heatSourceEnd_y = heatSourceLocation(4);
             if xPos > heatSourceStart_x && yPos > heatSourceStart_y && yPos < heatSourceEnd_y
+                % Using a linear decay of the heat source
 %                 convectionSource = convectionCoeff*(heatSourceStart_x*flameTemperature/(xPos));
+                % Using an exponential decay for the heat source
                 convectionSource = convectionCoeff*(flameTemperature/(1 + exp(-heatSourceStart_x/xPos)));
 %                 convectionSource = convectionCoeff*(flameTemperature);
 %                 currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);

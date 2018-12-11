@@ -16,7 +16,7 @@
     inletPressure = 6*101325;                                               % Inlet pressure to the chamber is 1 atm
     recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
     recirculation_vVel = 0.25;                                               % v-velocity at the recirculation inlets
-    numRecirculationInlets = 6;
+    numRecirculationInlets = 5;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
                                                                             % Each row represents the start and end of the inlet
     inletSize = domainLength/10;
@@ -27,7 +27,7 @@
 %     % NEW
 %     inletLocations(1,:) = [0.3*domainLength, 0.3*domainLength + inletSize];
 %     inletLocations(2,:) = [0.5*domainLength, 0.5*domainLength + inletSize];
-%     inletLocations(3,:) = [0.7*domainLength, 0.7*domainLength + inletSize];
+%     inletLocations(3,:) = [0.8*domainLength, 0.8*domainLength + inletSize];
 
     % ORIGINAL
 % %     4 inlets
@@ -37,21 +37,21 @@
 %     inletLocations(4,:) = [domainLength/4 + 3*10*domainLength/60, domainLength/4 + 3*10*domainLength/60 + inletSize];
 
 % %     5 inlets
-%     inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
-%     inletLocations(2,:) = [domainLength/6 + 10*domainLength/60, domainLength/6 + 10*domainLength/60 + inletSize];
-%     inletLocations(3,:) = [domainLength/6 + 2*10*domainLength/60, domainLength/6 + 2*10*domainLength/60 + inletSize];
-%     inletLocations(4,:) = [domainLength/6 + 3*10*domainLength/60, domainLength/6 + 3*10*domainLength/60 + inletSize];
-%     inletLocations(5,:) = [domainLength/6 + 4*10*domainLength/60, domainLength/6 + 4*10*domainLength/60 + inletSize];
+    inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
+    inletLocations(2,:) = [domainLength/6 + 10*domainLength/60, domainLength/6 + 10*domainLength/60 + inletSize];
+    inletLocations(3,:) = [domainLength/6 + 2*10*domainLength/60, domainLength/6 + 2*10*domainLength/60 + inletSize];
+    inletLocations(4,:) = [domainLength/6 + 3*10*domainLength/60, domainLength/6 + 3*10*domainLength/60 + inletSize];
+    inletLocations(5,:) = [domainLength/6 + 4*10*domainLength/60, domainLength/6 + 4*10*domainLength/60 + inletSize];
 
 % %     6 inlets
-inletLocations(1,:) = [domainLength/15, domainLength/15 + inletSize];
-inletLocations(2,:) = [domainLength/15 + 10*domainLength/60, domainLength/15 + 10*domainLength/60 + inletSize];
-inletLocations(3,:) = [domainLength/15 + 2*10*domainLength/60, domainLength/15 + 2*10*domainLength/60 + inletSize];
-inletLocations(4,:) = [domainLength/15 + 3*10*domainLength/60, domainLength/15 + 3*10*domainLength/60 + inletSize];
-inletLocations(5,:) = [domainLength/15 + 4*10*domainLength/60, domainLength/15 + 4*10*domainLength/60 + inletSize];
-inletLocations(6,:) = [domainLength/15 + 5*10*domainLength/60, domainLength/15 + 5*10*domainLength/60 + inletSize*2.5/3];
+% inletLocations(1,:) = [domainLength/15, domainLength/15 + inletSize];
+% inletLocations(2,:) = [domainLength/15 + 10*domainLength/60, domainLength/15 + 10*domainLength/60 + inletSize];
+% inletLocations(3,:) = [domainLength/15 + 2*10*domainLength/60, domainLength/15 + 2*10*domainLength/60 + inletSize];
+% inletLocations(4,:) = [domainLength/15 + 3*10*domainLength/60, domainLength/15 + 3*10*domainLength/60 + inletSize];
+% inletLocations(5,:) = [domainLength/15 + 4*10*domainLength/60, domainLength/15 + 4*10*domainLength/60 + inletSize];
+% inletLocations(6,:) = [domainLength/15 + 5*10*domainLength/60, domainLength/15 + 5*10*domainLength/60 + inletSize*2.5/3];
     % Heat source location (between 0.1*domainLength and 0.2*domainLength)
-    heatSourceLocation = [0.1*domainLength, 0.3*domainLength,0.25*domainWidth,0.75*domainWidth];
+    heatSourceLocation = [0.1*domainLength, 0.3*domainLength,0.2*domainWidth,0.8*domainWidth];
     flameStart_x = heatSourceLocation(2);
     % Physical properties of air (taken at 300C)
     % source - https://www.engineersedge.com/physics/viscosity_of_air_dynamic_and_kinematic_14483.htm
