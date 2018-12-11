@@ -26,7 +26,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
     heatSourceEnd_y = heatSourceLocation(4);
     
     flameTemperature = 2200;
-    
+%    flameTemperature = 5100; 
     % Total number of recirculation inlets
     numRecirculationInlets = size(inletLocations,1);
 % ORIGINAL
@@ -108,7 +108,9 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
 %             heatSourceStart_y = heatSourceLocation(3)
 %             heatSourceEnd_y = heatSourceLocation(4);
             if xPos > heatSourceStart_x && yPos > heatSourceStart_y && yPos < heatSourceEnd_y
-                convectionSource = convectionCoeff*(heatSourceStart_x*flameTemperature/(xPos));
+%                 convectionSource = convectionCoeff*(heatSourceStart_x*flameTemperature/(xPos));
+                convectionSource = convectionCoeff*(flameTemperature/(1 + exp(-heatSourceStart_x/xPos)));
+%                 convectionSource = convectionCoeff*(flameTemperature);
 %                 currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
             end
             bodySource = -v_velocity(j + 1,i + 1)*(9.81);
