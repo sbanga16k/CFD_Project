@@ -113,7 +113,7 @@ function [temperatureField] = solveEnergyEquation(oldTemperatureField, u_velocit
                 % Using an exponential decay for the heat source
                 convectionSource = convectionCoeff*(flameTemperature/(1 + exp(-heatSourceStart_x/xPos)));
 %                 convectionSource = convectionCoeff*(flameTemperature);
-%                 currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
+                currTempCoeff = currTempCoeff + convectionCoeff*dt/(density*specificHeat);
             end
             bodySource = -v_velocity(j + 1,i + 1)*(9.81);
             K = 1000*thermalCond(oldTemperatureField(j,i));
