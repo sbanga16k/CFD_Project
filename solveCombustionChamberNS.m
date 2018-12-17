@@ -16,25 +16,32 @@
     inletPressure = 6*101325;                                               % Inlet pressure to the chamber is 1 atm
     recirculation_uVel = 0;                                                 % u-velocity at the recirculation inlets
     recirculation_vVel = 0.25;                                              % v-velocity at the recirculation inlets
-    numRecirculationInlets = 4;
+    numRecirculationInlets = 3;
     inletLocations = zeros(numRecirculationInlets,2);                       % Locations of the recirculation inlets
                                                                             % Each row represents the start and end of the inlet
-    inletSize = domainLength/10;
+    inletSize = domainLength/6;
     % Recirculation inlets uniformly distributed between domainLength/3 and
     % 4*domainLength/5
     % Each row of inletLocations stores the start and end x-coordinates of
     % the inlets
-%     % NEW
-%     inletLocations(1,:) = [0.3*domainLength, 0.3*domainLength + inletSize];
-%     inletLocations(2,:) = [0.5*domainLength, 0.5*domainLength + inletSize];
-%     inletLocations(3,:) = [0.8*domainLength, 0.8*domainLength + inletSize];
+%     2 inlets
+    inletLocations(1,:) = [domainLength/5, domainLength/5 + inletSize];
+    inletLocations(2,:) = [domainLength*2/3, domainLength*1.9/3 + inletSize];
+    
+    inletLocations(1,:) = [domainLength/4, domainLength/4 + inletSize];
+    inletLocations(2,:) = [domainLength*6.9/10, domainLength*6.9/10 + inletSize];
+
+%     3 inlets
+    inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
+    inletLocations(2,:) = [domainLength/2, domainLength/2 + inletSize];
+    inletLocations(3,:) = [domainLength*4/5, domainLength*4/5 + inletSize];
 
     % ORIGINAL
-%     4 inlets
-    inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
-    inletLocations(2,:) = [domainLength/5 + 10*domainLength/60, domainLength/5 + 10*domainLength/60 + inletSize];
-    inletLocations(3,:) = [domainLength/4 + 2*10*domainLength/60, domainLength/4 + 2*10*domainLength/60 + inletSize];
-    inletLocations(4,:) = [domainLength/3 + 3*10*domainLength/60, domainLength/3 + 3*10*domainLength/60 + inletSize];
+% %     4 inlets
+%     inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
+%     inletLocations(2,:) = [domainLength/5 + 10*domainLength/60, domainLength/5 + 10*domainLength/60 + inletSize];
+%     inletLocations(3,:) = [domainLength/4 + 2*10*domainLength/60, domainLength/4 + 2*10*domainLength/60 + inletSize];
+%     inletLocations(4,:) = [domainLength/3 + 3*10*domainLength/60, domainLength/3 + 3*10*domainLength/60 + inletSize];
 
 % %     5 inlets
 %     inletLocations(1,:) = [domainLength/6, domainLength/6 + inletSize];
