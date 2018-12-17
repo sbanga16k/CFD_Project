@@ -54,6 +54,7 @@ function [] = plotResults(u_velocity, v_velocity, pressureField, ...
 %     [X_scalar,Y_scalar] = meshgrid(xScalar,yScalar);
     figure;
     [c,h] = contourf(X,Y,temperature,50);%'ShowText', 'on');
+    colorbar;
     set(h,'LineColor','none')
     xlabel('x', 'Interpreter', 'latex');
     ylabel('y', 'Interpreter', 'latex');
